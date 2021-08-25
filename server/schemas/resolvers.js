@@ -4,21 +4,16 @@ const { AuthenticationError } = require("apollo-server-express");
 
 const resolvers = {
   Query: {
-    user: async ({ user = null, params }, res) => {
-      const foundUser = User.findOne({
-        $or: [
-          { _id: user ? user._id : params.id },
-          { username: params.username },
-        ],
-      });
-      return res.json(foundUser);
+    user: async (parent, { id }) => {
+      return User.findOne({ _id: id });
     },
   }, // this is the end of the Query
 
   Mutation: {
-    createUser: async (parent, args) => {
-      const user = await User.create(args);
-      return user;
+    createUser: async (parent, { username, email, password }) => {
+      const user = await User.create({ username, email, password });
+      const token = signToken(user);
+      return { token, user };
     },
     login: async (parent, { email, password }) => {
       const user = await User.findOne({ email });
@@ -34,14 +29,14 @@ const resolvers = {
       return { token, user };
     },
     // remove a book from `savedBooks`
-    deleteBook: async (parent, { book }, context) => {
+    deleteBook: async (parent, { bookId }, context) => {
       if (context.user) {
         return User.findByIdAndUpdate(
           { _id: context.user._id },
-          { $pull: { books: book } },
+          { $pull: { savedBooks: { bookId: bookId } } }, // The $pull operator removes from an existing array all instances of a value or values that match a specified condition.
           { new: true }
         );
-      }
+      } // end of if statement
       throw new AuthenticationError("You need to be logged in!");
     },
   }, // end of Mutation
