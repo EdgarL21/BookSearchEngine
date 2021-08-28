@@ -4,8 +4,10 @@ const { AuthenticationError } = require("apollo-server-express");
 
 const resolvers = {
   Query: {
+    // user comes from typeDefs
     user: async (parent, { id }) => {
-      return User.findOne({ _id: id });
+      // this line connects to typeDefs
+      return User.findOne({ _id: id }); // this line connects to our models
     },
   }, // this is the end of the Query
 
@@ -41,3 +43,5 @@ const resolvers = {
     },
   }, // end of Mutation
 }; // end of resolvers
+
+module.exports = resolvers;
