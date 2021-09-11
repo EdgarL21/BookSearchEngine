@@ -1,3 +1,7 @@
+// THIS FILE WAS CALLED IN THE ROUTES FOLDER BUT THAT ENTIRE FOLDER HAS BEEN COMMENTED OUT BECAUSE IT USES REST AND WE ARE TRYING TO CONVERT THIS APP TO GRAPHQL
+//
+//
+//
 // import user model
 const { User } = require("../models");
 // import sign token function from auth

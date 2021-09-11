@@ -7,47 +7,57 @@ import {
   Button,
 } from "react-bootstrap";
 
-import { getMe, deleteBook } from "../utils/API";
+import { useQuery, useMutation } from "@apollo/client";
+import { REMOVE_BOOK } from "../utils/mutations";
+import { GET_ME } from "../utils/queries";
+
+// import { getMe, deleteBook } from "../utils/API";
 import Auth from "../utils/auth";
 import { removeBookId } from "../utils/localStorage";
 
 const SavedBooks = () => {
-  const [userData, setUserData] = useState({});
+  const [removeBook, { error }] = useMutation(REMOVE_BOOK);
+  console.log(removeBook);
+  console.log(error);
+  const { loading, data } = useQuery(GET_ME);
+  const userData = data?.me || {}; // if we have something in the data vairable then me method is true
+
+  // const [userData, setUserData] = useState({});
 
   // use this to determine if `useEffect()` hook needs to run again
-  const userDataLength = Object.keys(userData).length;
+  // const userDataLength = Object.keys(userData).length;
 
-  useEffect(() => {
-    const getUserData = async () => {
-      try {
-        // create a token variable with which uses a condition
-        // uses Auth, calls the loggedin() method and if true runs the getToken method attached to Auth
-        // if false token is now null
-        const token = Auth.loggedIn() ? Auth.getToken() : null;
+  // useEffect(() => {
+  //   const getUserData = async () => {
+  //     try {
+  //       // create a token variable with which uses a condition
+  //       // uses Auth, calls the loggedin() method and if true runs the getToken method attached to Auth
+  //       // if false token is now null
+  //       const token = Auth.loggedIn() ? Auth.getToken() : null;
 
-        // if token is not true then returns flase and gets out of function
-        if (!token) {
-          return false;
-        }
+  //       // if token is not true then returns flase and gets out of function
+  //       if (!token) {
+  //         return false;
+  //       }
 
-        // if there is a token it runs the the getMe method with the token and puts it into response
-        const response = await getMe(token);
+  //       // if there is a token it runs the the getMe method with the token and puts it into response
+  //       const response = await getMe(token);
 
-        if (!response.ok) {
-          throw new Error("something went wrong!");
-        }
+  //       if (!response.ok) {
+  //         throw new Error("something went wrong!");
+  //       }
 
-        // we get the response json and put into the variable user
-        const user = await response.json();
-        // now we set the userData == to user which is a json object
-        setUserData(user);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  //       // we get the response json and put into the variable user
+  //       const user = await response.json();
+  //       // now we set the userData == to user which is a json object
+  //       setUserData(user);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
 
-    getUserData(); // runs the getUserData function but there is a restriction
-  }, [userDataLength]); // the function only runs again if react sees a change to the userDataLengths
+  //   getUserData(); // runs the getUserData function but there is a restriction
+  // }, [userDataLength]); // the function only runs again if react sees a change to the userDataLengths
 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
   const handleDeleteBook = async (bookId) => {
@@ -58,14 +68,20 @@ const SavedBooks = () => {
     }
 
     try {
-      const response = await deleteBook(bookId, token);
+      const { data } = await removeBook({ variables: { bookId } });
 
-      if (!response.ok) {
+      console.log(data);
+      // const response = await deleteBook(bookId, token);
+
+      // if (!response.ok) {
+      //   throw new Error("something went wrong!");
+      // }
+      if (error) {
         throw new Error("something went wrong!");
       }
 
-      const updatedUser = await response.json();
-      setUserData(updatedUser);
+      // const updatedUser = await response.json();
+      // setUserData(updatedUser);
       // upon success, remove book's id from localStorage
       removeBookId(bookId);
     } catch (err) {
@@ -74,7 +90,7 @@ const SavedBooks = () => {
   };
 
   // if data isn't here yet, say so
-  if (!userDataLength) {
+  if (loading) {
     return <h2>LOADING...</h2>;
   }
 

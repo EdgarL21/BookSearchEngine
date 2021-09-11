@@ -4,15 +4,19 @@ const { AuthenticationError } = require("apollo-server-express");
 
 const resolvers = {
   Query: {
-    // user comes from typeDefs
-    user: async (parent, { id }) => {
-      // this line connects to typeDefs
-      return User.findOne({ _id: id }); // this line connects to our models
+    me: async (parent, args, context) => {
+      if (context.user) {
+        const user = await User.findOne({ _id: context.user._id });
+
+        return user;
+      }
+
+      throw new AuthenticationError("Not logged in");
     },
   }, // this is the end of the Query
 
   Mutation: {
-    createUser: async (parent, { username, email, password }) => {
+    addUser: async (parent, { username, email, password }) => {
       const user = await User.create({ username, email, password });
       const token = signToken(user);
       return { token, user };
@@ -30,8 +34,18 @@ const resolvers = {
       const token = signToken(user);
       return { token, user };
     },
+    saveBook: async (parent, { book }, context) => {
+      if (context.user) {
+        return User.findByIdAndUpdate(
+          { _id: context.user._id },
+          { $addToSet: { savedBooks: book } }, // The $addToSet operator adds a value to an array unless the value is already present, in which case $addToSet does nothing to that array.
+          { new: true, runValidators: true }
+        );
+      } // end of if statement
+      throw new AuthenticationError("You need to be logged in!");
+    },
     // remove a book from `savedBooks`
-    deleteBook: async (parent, { bookId }, context) => {
+    removeBook: async (parent, { bookId }, context) => {
       if (context.user) {
         return User.findByIdAndUpdate(
           { _id: context.user._id },
