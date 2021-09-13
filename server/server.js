@@ -15,7 +15,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   // Add context to our server so data from the `authMiddleware()` function can pass data to our resolver functions
-  context: authMiddleware, // i think this is how the authMiddleware from auth.js and the
+  // context: authMiddleware, // i think this is how the authMiddleware from auth.js and the
 });
 
 // await server.start();
